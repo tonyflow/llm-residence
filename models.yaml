@@ -1,0 +1,10 @@
+models:
+  - id: echo-mini
+    runtime: echo
+    warm_ttl_seconds: 300
+
+  - id: llama3-ollama
+    runtime: ollama
+    ollama_model: llama3.2:latest
+    base_url: http://localhost:11434
+    warm_ttl_seconds: 600

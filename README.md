@@ -1,4 +1,4 @@
-# Mini FastAPI Inference Server (Learning Build)
+# Mini FastAPI Inference Server 
 
 This is a first implementation of a small inference server that demonstrates core concepts:
 

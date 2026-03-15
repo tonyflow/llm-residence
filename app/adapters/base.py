@@ -34,7 +34,7 @@ class RuntimeAdapter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def stream_generate(
+    def stream_generate(
         self,
         messages: list[ChatMessage],
         temperature: float | None,

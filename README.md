@@ -5,7 +5,7 @@ This is a first implementation of a small inference server that demonstrates cor
 - Unified API (`/v1/chat/completions`, OpenAI-style shape)
 - Model registry (`models.yaml`)
 - Lazy model loading + warm model cache + idle eviction
-- Runtime adapters (`echo`, `ollama`)
+- Runtime adapters (`echo`, `llama.cpp local`)
 - Non-streaming and streaming (SSE)
 
 ## Project Layout
@@ -15,7 +15,7 @@ app/
   adapters/
     base.py
     echo.py
-    ollama.py
+    llama_cpp_local.py
   services/
     chat_service.py
   config.py
@@ -69,21 +69,15 @@ curl -s http://localhost:8000/v1/chat/completions \
   }'
 ```
 
-### Ollama-backed model
+### Local GGUF model (llama.cpp)
 
-Make sure Ollama is running and the model exists locally:
-
-```bash
-ollama run llama3.2:latest
-```
-
-Then call:
+Edit `models.yaml` and set `model_path` to your local GGUF file, then call:
 
 ```bash
 curl -s http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama3-ollama",
+    "model": "qwen-local-gguf",
     "messages": [{"role": "user", "content": "Explain KV cache in 3 lines"}],
     "temperature": 0.2,
     "max_tokens": 120,
@@ -97,7 +91,7 @@ curl -s http://localhost:8000/v1/chat/completions \
 curl -N http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama3-ollama",
+    "model": "qwen-local-gguf",
     "messages": [{"role": "user", "content": "Write a short haiku about servers"}],
     "stream": true
   }'
@@ -107,4 +101,5 @@ curl -N http://localhost:8000/v1/chat/completions \
 
 - `ModelManager` loads adapters on first request and keeps them warm.
 - Idle adapters are evicted using `warm_ttl_seconds` in `models.yaml`.
+- `llama_cpp_local` runs model inference in-process (no external inference server).
 - This implementation is intentionally minimal and meant for learning.

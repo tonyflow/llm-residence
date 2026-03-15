@@ -29,6 +29,8 @@ class EchoAdapter(RuntimeAdapter):
         if not self._loaded:
             raise RuntimeError("Echo adapter not loaded")
 
+        # Return the last message of the last user, prefixed with the adapter name. 
+        # This simulates a response without any real generation logic.
         last_user = next((m.content for m in reversed(messages) if m.role == "user"), "")
         content = f"{self._prefix}: {last_user}".strip()
         completion_tokens = len(content.split())

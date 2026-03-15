@@ -11,7 +11,16 @@ from app.model_registry import ModelRegistry
 from app.schemas import ChatCompletionRequest, ModelsResponse, ModelInfo
 from app.services.chat_service import ChatService
 
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+_logger = logging.getLogger(__name__)
 
+
+_logger.info("Starting Mini Inference Server with settings: %s", settings)
 registry = ModelRegistry(settings.model_registry_path)
 manager = ModelManager(
     registry=registry,

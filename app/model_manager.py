@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from app.adapters.base import RuntimeAdapter
 from app.adapters.echo import EchoAdapter
-from app.adapters.ollama import OllamaAdapter
+from app.adapters.llama_cpp_local import LocalLlamaCppAdapter
 from app.model_registry import ModelConfig, ModelRegistry
 
 
@@ -41,7 +41,9 @@ class ModelManager:
                 await loaded.adapter.unload()
                 close = getattr(loaded.adapter, "close", None)
                 if callable(close):
-                    await close()
+                    maybe_coro = close()
+                    if asyncio.iscoroutine(maybe_coro):
+                        await maybe_coro
             self._loaded.clear()
 
     async def get_adapter(self, model_id: str) -> RuntimeAdapter:
@@ -66,10 +68,18 @@ class ModelManager:
     def _build_adapter(self, cfg: ModelConfig) -> RuntimeAdapter:
         if cfg.runtime == "echo":
             return EchoAdapter(prefix=str(cfg.params.get("prefix", "Echo")))
-        if cfg.runtime == "ollama":
-            base_url = str(cfg.params.get("base_url", "http://localhost:11434"))
-            ollama_model = str(cfg.params["ollama_model"])
-            return OllamaAdapter(base_url=base_url, ollama_model=ollama_model)
+        if cfg.runtime == "llama_cpp_local":
+            model_path = str(cfg.params["model_path"])
+            n_ctx = int(cfg.params.get("n_ctx", 4096))
+            n_gpu_layers = int(cfg.params.get("n_gpu_layers", 0))
+            n_threads_raw = cfg.params.get("n_threads")
+            n_threads = int(n_threads_raw) if n_threads_raw is not None else None
+            return LocalLlamaCppAdapter(
+                model_path=model_path,
+                n_ctx=n_ctx,
+                n_gpu_layers=n_gpu_layers,
+                n_threads=n_threads,
+            )
         raise ValueError(f"Unsupported runtime '{cfg.runtime}'")
 
     async def _eviction_loop(self) -> None:
@@ -93,4 +103,6 @@ class ModelManager:
                 await loaded.adapter.unload()
                 close = getattr(loaded.adapter, "close", None)
                 if callable(close):
-                    await close()
+                    maybe_coro = close()
+                    if asyncio.iscoroutine(maybe_coro):
+                        await maybe_coro
